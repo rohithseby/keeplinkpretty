@@ -5,55 +5,68 @@ import requests
 import twitter as t
 from datetime import datetime
 
-load_dotenv()
 
-email_id = os.getenv("EMAIL")
-password = os.getenv("PASSWORD")
+def twitter(keepObject):
 
-keep = k.Keep()
-success = keep.login(email=email_id, password=password)
+    all_notes = keepObject.all()
 
-all_notes = keep.all()
+    count = 0
+    ids = []
+    links = []
 
-count = 0
-ids = []
-links = []
+    matching_id = {}
 
-matching_id = {}
+    keepObject.sync()
 
-keep.sync()
+    twitter_label_id = keepObject.findLabel("Twitter").id
 
-# for note in all_notes:
-#     print(note.text)
+    for note in all_notes:
+        if (
+            note.text.strip().endswith("(/\)") == False
+            and note.labels.get(twitter_label_id) != None
+        ):
+            current_link = note.text
+            current_tweet_id = current_link.split("status/")[1].split("?")[0]
+            cleaned_link = current_link.split("?")[0]
+            current_note_id = note.id
+            ids.append(current_tweet_id)
 
-twitter_label_id = keep.findLabel("Twitter").id
+            matching_id[current_note_id] = {
+                "tweet_id": current_tweet_id,
+                "cleaned_link": cleaned_link,
+            }
 
-for note in all_notes:
-    if (
-        note.text.strip().endswith("(/\)") == False
-        and note.labels.get(twitter_label_id) != None
-    ):
-        current_link = note.text
-        current_tweet_id = current_link.split("status/")[1].split("?")[0]
-        cleaned_link = current_link.split("?")[0]
-        current_note_id = note.id
-        ids.append(current_tweet_id)
+    dump = t.init_calls(ids)
 
-        matching_id[current_note_id] = {
-            "tweet_id": current_tweet_id,
-            "cleaned_link": cleaned_link,
-        }
+    for id in matching_id:
+        selected_tweet = dump[matching_id[id]["tweet_id"]]
+        selected_note = keepObject.get(id)
 
-dump = t.init_calls(ids)
+        selected_note.title = (
+            selected_tweet["text"].split("https://")[0]
+            + "@"
+            + selected_tweet["username"]
+        )
+        selected_note.text = matching_id[id]["cleaned_link"] + " \n(/\)"
+
+    keepObject.sync()
 
 
-for id in matching_id:
-    selected_tweet = dump[matching_id[id]["tweet_id"]]
-    selected_note = keep.get(id)
+def link_cleanup(keepObject):
+    return None
 
-    selected_note.title = (
-        selected_tweet["text"].split("https://")[0] + "@" + selected_tweet["username"]
-    )
-    selected_note.text = matching_id[id]["cleaned_link"] + " (/\)"
 
-keep.sync()
+def main():
+    load_dotenv()
+
+    email_id = os.getenv("EMAIL")
+    password = os.getenv("PASSWORD")
+
+    keep = k.Keep()
+    success = keep.login(email=email_id, password=password)
+
+    twitter(keep)
+
+
+if __name__ == "__main__":
+    main()

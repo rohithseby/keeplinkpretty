@@ -5,14 +5,19 @@ import tweepy as tw
 import json
 import datetime
 
-API_KEY = os.getenv("API_KEY")
 
-client = tw.Client(API_KEY)
+def auth():
+    API_KEY = os.getenv("API_KEY")
+
+    client = tw.Client(API_KEY)
+
+    return client
+
 
 tweets_info = {}
 
 
-def get_tweet_info(tweet_id):
+def get_tweet_info(client, tweet_id):
     global tweets_info
 
     tweet = client.get_tweet(
@@ -45,9 +50,9 @@ def get_tweet_info(tweet_id):
 
 
 def init_calls(ids):
-
+    auth_client = auth()
     for id in ids:
-        get_tweet_info(id)
+        get_tweet_info(auth_client, id)
 
     global tweets_info
 
@@ -56,7 +61,7 @@ def init_calls(ids):
             if tweets_info[info][attr] == None:
                 tweets_info[info][attr] = ""
 
-    with open("tweets.json", "w") as j:
+    with open("tweets_info.json", "w") as j:
         json.dump(tweets_info, j, indent=2)
 
     return tweets_info
