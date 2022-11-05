@@ -1,11 +1,13 @@
 import requests
-import json
+import os
+from dotenv import load_dotenv
 import tweepy as tw
+import json
 import datetime
 
-client = tw.Client(
-    r"AAAAAAAAAAAAAAAAAAAAAG%2FFiwEAAAAA5P8gm%2BzhuSLonYhDFtX5kOUWCbE%3DtYRaEnwoAFbMZ2JiZWsXiCKc2ZYtnsXvJbNdCGJXxBznfALWXd"
-)
+API_KEY = os.getenv("API_KEY")
+
+client = tw.Client(API_KEY)
 
 tweets_info = {}
 

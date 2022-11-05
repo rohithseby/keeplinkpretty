@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 import os
 import requests
 import twitter as t
-import image as img
 from datetime import datetime
 
 load_dotenv()
