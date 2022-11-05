@@ -1,18 +1,18 @@
 import gkeepapi as k
 from dotenv import load_dotenv
 import os
-import requests
 import twitter as t
 from datetime import datetime
+from server import keepalive
+import schedule
+import time
 
 
 def twitter(keepObject):
 
     all_notes = keepObject.all()
 
-    count = 0
     ids = []
-    links = []
 
     matching_id = {}
 
@@ -65,7 +65,15 @@ def main():
     keep = k.Keep()
     success = keep.login(email=email_id, password=password)
 
+    keepalive()
+
     twitter(keep)
+
+    schedule.every(30).seconds.do(twitter, keep)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
 
 
 if __name__ == "__main__":
