@@ -12,20 +12,26 @@ def twitter(keepObject):
 
     all_notes = keepObject.all()
 
-    ids = []
-
-    matching_id = {}
+    ids, matching_id = [], {}
 
     keepObject.sync()
 
     twitter_label_id = keepObject.findLabel("Twitter").id
 
+    twitter_label = keepObject.getLabel(twitter_label_id)
+
     for note in all_notes:
+        if (
+            note.text.strip().startswith("https://twitter.com")
+            and note.labels.get(twitter_label_id) == None
+        ):
+            note.labels.add(twitter_label)
+
         if (
             note.text.strip().endswith("(/\)") == False
             and note.labels.get(twitter_label_id) != None
         ):
-            current_link = note.text
+            current_link = note.text.strip()
             current_tweet_id = current_link.split("status/")[1].split("?")[0]
             cleaned_link = current_link.split("?")[0]
             current_note_id = note.id
@@ -50,10 +56,6 @@ def twitter(keepObject):
         selected_note.text = matching_id[id]["cleaned_link"] + " \n(/\)"
 
     keepObject.sync()
-
-
-def link_cleanup(keepObject):
-    return None
 
 
 def main():
