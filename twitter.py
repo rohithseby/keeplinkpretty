@@ -64,8 +64,6 @@ def init_calls(ids):
     with open("tweets_info.json", "w") as j:
         json.dump(tweets_info, j, indent=2)
 
-    print("success")
-
     return tweets_info
 
 
