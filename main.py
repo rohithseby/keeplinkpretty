@@ -72,11 +72,11 @@ def discord(keepObject, notes, url):
 
         id = str(note.id)
         if id in sent_tracker and sent_tracker[id] == 0:
-            to_send[note.title] = note.text.split("-t")[0].strip()
+            to_send[note.title] = note.text.split("|-|")[0].strip()
             sent_tracker[id] = 1
         elif id not in sent_tracker:
             sent_tracker[id] = 0
-            to_send[note.title] = note.text.split("-t")[0].strip()
+            to_send[note.title] = note.text.split("|-|")[0].strip()
             sent_tracker[id] = 1
         else:
             continue
@@ -89,6 +89,7 @@ def discord(keepObject, notes, url):
             + to_send[send]
         )
         requests.post(url=url, data=json.dumps(data), headers=headers)
+        time.sleep(3)
 
     with open("discord.json", "w") as dw:
         json.dump(sent_tracker, dw, indent=2)
@@ -194,6 +195,8 @@ def add_seperator(keepObject, notes):
             note.text = note.text + "\n|-|"
     keepObject.sync()
 
+    print("add_seperator() - done @", datetime.now())
+
 
 def main():
     load_dotenv()
@@ -208,21 +211,21 @@ def main():
     all_notes = keep.all()
 
     add_seperator(keep, all_notes)
+    get_title(keep, all_notes)
     twitter(keep, all_notes)
-    discord(keep, all_notes, url)
     # removes(keep, all_notes)
     sort(keep, all_notes)
-    get_title(keep, all_notes)
+    discord(keep, all_notes, url)
 
     schedule.every(20).seconds.do(add_seperator, keep, all_notes)
-    schedule.every(40).seconds.do(twitter, keep, all_notes)
-    schedule.every(80).seconds.do(discord, keep, all_notes, url)
-    schedule.every(100).seconds.do(sort, keep, all_notes)
-    schedule.every(120).seconds.do(get_title, keep, all_notes)
+    schedule.every(20).seconds.do(get_title, keep, all_notes)
+    schedule.every(120).seconds.do(twitter, keep, all_notes)
+    schedule.every(120).seconds.do(sort, keep, all_notes)
+    schedule.every(120).seconds.do(discord, keep, all_notes, url)
 
     while True:
         schedule.run_pending()
-        time.sleep(90)
+        time.sleep(10)
         keep.sync()
 
 
