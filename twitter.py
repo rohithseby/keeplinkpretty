@@ -14,11 +14,10 @@ def auth():
     return client
 
 
-tweets_info = {}
-
-
-def get_tweet_info(client, tweet_id):
-    global tweets_info
+def get_tweet_info(tweet_id):
+    tweet_info = {}
+    # print(tweet_id)
+    client = auth()
 
     tweet = client.get_tweet(
         id=tweet_id,
@@ -28,13 +27,7 @@ def get_tweet_info(client, tweet_id):
         media_fields=["preview_image_url", "url"],
     )
 
-    tweet_info = {
-        "name": "",
-        "username": "",
-        "text": "",
-        "image_url": "",
-        "preview_image_url": "",
-    }
+    tweet_info = {}
 
     if "media" in tweet.includes:
         tweet_info["preview_image_url"] = tweet.includes["media"][0].preview_image_url
@@ -45,26 +38,4 @@ def get_tweet_info(client, tweet_id):
     tweet_info["text"] = tweet.data.text
     tweet_info["created_at"] = str(tweet.data.created_at.strftime("%m-%d-%Y %H:%M"))
 
-    if str(tweet.data.id) == tweet_id:
-        tweets_info[tweet_id] = tweet_info
-
-
-def init_calls(ids):
-    auth_client = auth()
-    for id in ids:
-        get_tweet_info(auth_client, id)
-
-    global tweets_info
-
-    for info in tweets_info:
-        for attr in tweets_info[info]:
-            if tweets_info[info][attr] == None:
-                tweets_info[info][attr] = ""
-
-    with open("tweets_info.json", "w") as j:
-        json.dump(tweets_info, j, indent=2)
-
-    return tweets_info
-
-
-# init_calls()
+    return tweet_info

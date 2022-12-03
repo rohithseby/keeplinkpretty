@@ -13,43 +13,16 @@ from datetime import datetime
 
 
 def twitter(keepObject, notes):
-
-    ids, matching_id = [], {}
-
     keepObject.sync()
 
-    twitter_label_id = keepObject.findLabel("Twitter").id
-
-    twitter_label = keepObject.getLabel(twitter_label_id)
-    notes = sorted(notes, key=lambda x: x.timestamps.created)
-
     for note in notes:
-        if (
-            note.text.startswith("http")
-            and "-tw" not in note.text.split("|-|")[1]
-            and note.text.split("//")[1].split("/")[0] == "twitter.com"
-        ):
-            current_link = note.text.strip()
-            current_tweet_id = current_link.split("status/")[1].split("|")[0].strip()
-            cleaned_link = current_link.split("?")[0]
-            current_note_id = note.id
-            ids.append(current_tweet_id)
-            matching_id[current_note_id] = {
-                "tweet_id": current_tweet_id,
-                "cleaned_link": cleaned_link,
-            }
-    dump = t.init_calls(ids)
-
-    for id in matching_id:
-        selected_tweet = dump[matching_id[id]["tweet_id"]]
-        selected_note = keepObject.get(id)
-
-        selected_note.title = (
-            selected_tweet["text"].split("https://")[0]
-            + " @"
-            + selected_tweet["username"]
-        )
-        selected_note.text = matching_id[id]["cleaned_link"] + "-tw"
+        if note.title == "" and "twitter.com" in note.text and "-tw" not in note.text:
+            tweet_id = note.text.split("status/")[1].split("?")[0]
+            tweet_info = t.get_tweet_info(tweet_id=tweet_id)
+            note.title = (
+                tweet_info["text"].split("|-|")[0] + " @" + tweet_info["username"]
+            )
+            note.text = note.text + "-tw"
 
     print("twitter() - done @", datetime.now())
 
@@ -65,8 +38,6 @@ def discord(keepObject, notes, url):
     headers = {"Content-Type": "application/json"}
     to_send = {}
     data = {"content": None}
-
-    notes = sorted(notes, key=lambda x: x.timestamps.created)
 
     for note in notes:
 
@@ -89,7 +60,7 @@ def discord(keepObject, notes, url):
             + to_send[send]
         )
         requests.post(url=url, data=json.dumps(data), headers=headers)
-        time.sleep(3)
+        # time.sleep(3)
 
     with open("discord.json", "w") as dw:
         json.dump(sent_tracker, dw, indent=2)
@@ -198,6 +169,16 @@ def add_seperator(keepObject, notes):
     print("add_seperator() - done @", datetime.now())
 
 
+def driver(keep, all_notes, url):
+    add_seperator(keep, all_notes)
+    get_title(keep, all_notes)
+    twitter(keep, all_notes)
+    # removes(keep, all_notes)
+    sort(keep, all_notes)
+    discord(keep, all_notes, url)
+    print("--------------------------------------")
+
+
 def main():
     load_dotenv()
     email_id = os.getenv("EMAIL")
@@ -209,19 +190,10 @@ def main():
     keepalive()
 
     all_notes = keep.all()
+    all_notes = sorted(all_notes, key=lambda x: x.timestamps.created)
+    driver(keep=keep, all_notes=all_notes, url=url)
 
-    add_seperator(keep, all_notes)
-    get_title(keep, all_notes)
-    twitter(keep, all_notes)
-    # removes(keep, all_notes)
-    sort(keep, all_notes)
-    discord(keep, all_notes, url)
-
-    schedule.every(20).seconds.do(add_seperator, keep, all_notes)
-    schedule.every(20).seconds.do(get_title, keep, all_notes)
-    schedule.every(120).seconds.do(twitter, keep, all_notes)
-    schedule.every(120).seconds.do(sort, keep, all_notes)
-    schedule.every(120).seconds.do(discord, keep, all_notes, url)
+    # schedule.every(20).seconds.do(driver, keep, all_notes, url)
 
     while True:
         schedule.run_pending()

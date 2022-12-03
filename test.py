@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup as bs
 import requests
+import json
 
 
 # def parse_link(url):
@@ -19,6 +20,19 @@ import requests
 #     )
 # )
 
-requests.get(
-    "https://kq5xeh8h7g.execute-api.ap-south-1.amazonaws.com/default/keeplinkspretty"
+data = {"content": None}
+
+data["content"] = (
+    "**-----------------------------------------------------------------------------------------------------------------**\n\n>>> **"
+    + "Add External Python Libraries to AWS Lambda using Lambda Layers"
+    + "**\n\n"
+    + "https://www.linkedin.com/pulse/add-external-python-libraries-aws-lambda-using-layers-gabe-olokun/"
+)
+
+headers = {"Content-Type": "application/json"}
+
+requests.post(
+    url="https://discord.com/api/webhooks/1040932743414034472/mdFPZZ2pCm2ppNYQDw08dazGHbG-HijG0h4j6T9WCxsqcfT6ptP--gqy8SZ89omZzWH6",
+    data=json.dumps(data),
+    headers=headers,
 )
